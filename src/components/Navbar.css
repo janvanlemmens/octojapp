@@ -1,0 +1,35 @@
+ol{
+    list-style-type: none;
+    background-color: #737171;
+    color: #fff;
+    overflow: hidden;
+    margin: 0;
+    border: 0;
+}
+li{
+    float: none;
+    display: inline-block;
+    padding: 25px;
+    color: #fff;
+}
+.navigation-menu{
+
+    width: 100%;
+}
+
+a {
+    color: rgb(13, 41, 9);
+    text-decoration: none;
+  }
+
+.navigation-menu li.active {
+    background-color: #d0f0c0;
+    font-weight: bold;
+    border-radius: 4px;
+    color: #00F
+  }
+
+
+  a:hover {
+     color: #00F
+  }
