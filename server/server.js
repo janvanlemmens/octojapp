@@ -5,6 +5,7 @@ import env from "dotenv";
 import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
+import axios from "axios";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path
@@ -131,6 +132,36 @@ app.post("/move-file", (req, res) => {
       return res.status(500).send("Error moving file");
     }
     res.send("File copied successfully");
+  });
+});
+
+app.get("/octo-auth", async (req, res) => {
+  try {
+    const url = process.env.URL + "/authentication";
+    const response = await axios.post(
+      url,
+      { user: process.env.USR, password: process.env.PAS }, // request body
+      {
+        headers: {
+          softwareHouseUuid: process.env.SHI,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: "API request failed" });
+  }
+});
+
+app.post("/octo-token", async (req, res) => {
+  const url = process.env.URL + "/dossiers";
+  const response = await axios.post(url, null, {
+    params: { dossierId: process.env.DOS_NR }, // query parameters
+    headers: {
+      token: process.env.SHI,
+      "Content-Type": "application/json",
+    },
   });
 });
 

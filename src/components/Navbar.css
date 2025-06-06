@@ -1,35 +1,62 @@
-ol{
-    list-style-type: none;
-    background-color: #737171;
-    color: #fff;
-    overflow: hidden;
+.navigation-menu {
+    background-color: #555;
+    padding: 10px;
+  }
+  
+  .menu {
+    list-style: none;
+    display: flex;
+    gap: 40px;
     margin: 0;
-    border: 0;
-}
-li{
-    float: none;
-    display: inline-block;
-    padding: 25px;
+    padding: 0;
+  }
+  
+  .menu > li {
+    position: relative;
+  }
+  
+  .menu a,
+  .menu span {
     color: #fff;
-}
-.navigation-menu{
-
-    width: 100%;
-}
-
-a {
-    color: rgb(13, 41, 9);
     text-decoration: none;
+    padding: 8px 12px;
+    display: block;
   }
-
-.navigation-menu li.active {
-    background-color: #d0f0c0;
-    font-weight: bold;
+  
+  .menu li.active > a,
+  .menu li.active > span {
+    background-color: #cfc;
+    color: #000;
     border-radius: 4px;
-    color: #00F
+    font-weight: bold;
   }
-
-
-  a:hover {
-     color: #00F
+  
+  .has-submenu .submenu {
+    display: none;
+    position: absolute;
+    top: 100%; /* below the parent */
+    left: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-width: 120px;
+    z-index: 1000;
   }
+  
+  .has-submenu:hover .submenu {
+    display: block;
+  }
+  
+  .submenu li a {
+    padding: 8px 12px;
+    color: #111;
+    text-decoration: none;
+    display: block;
+  }
+  
+  .submenu li a:hover {
+    background-color: #eee;
+  }
+  

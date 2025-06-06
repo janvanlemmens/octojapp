@@ -5,6 +5,7 @@ import "./index.css";
 import App from "./pages/App";
 import Purchases from "./pages/Purchases";
 import Sales from "./pages/Sales";
+import Impinv from "./pages/Impinv";
 import reportWebVitals from "./reportWebVitals";
 
 const router = createBrowserRouter([
@@ -13,12 +14,16 @@ const router = createBrowserRouter([
     element: <App />,
   },
   {
-    path: "/Purchases",
+    path: "/purchases",
     element: <Purchases />,
   },
   {
-    path: "/Sales",
+    path: "/sales",
     element: <Sales />,
+  },
+  {
+    path: "/import/invoices",
+    element: <Impinv />,
   },
 ]);
 
