@@ -5,6 +5,7 @@
     font-weight: bold;
     transition: transform 0.1s ease;
     border:0.1em rgb(169, 215, 166) solid;
+    cursor: "pointer";
   }
   
   .custom-button:active {

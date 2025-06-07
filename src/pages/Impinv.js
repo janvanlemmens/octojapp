@@ -1,31 +1,206 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
+import Select from "react-select";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import Navbar from "../components/Navbar";
+import CustomButton from "../components/ui/CustomButton";
+import { toast } from "react-toastify";
+import CryptoJS from "crypto-js";
 import axios from "axios";
-import "./Pages.css";
 
-export default function Impinv() {
-  /*
-  useEffect(() => {
-    const fetchAuth = async () => {
-      try {
-        const response = await axios.get("http://localhost:5001/octo-auth");
+const customStyles = {
+  control: (provided) => ({
+    ...provided,
+    borderRadius: 4,
+    borderColor: "#888",
+    minHeight: 36,
+    boxShadow: "none",
+    "&:hover": {
+      borderColor: "#555",
+    },
+  }),
+  menu: (provided) => ({
+    ...provided,
+    borderRadius: 4,
+  }),
+};
 
-        console.log(response);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+const formStyle = {
+  maxWidth: 400,
+  margin: "30px auto",
+  padding: 20,
+  border: "1px solid #ccc",
+  borderRadius: 8,
+  fontFamily: "Arial, sans-serif",
+  backgroundColor: "#f9f9f9",
+};
 
-    fetchAuth();
-  }, []);
-  */
+const labelStyle = {
+  display: "block",
+  marginBottom: 6,
+  fontWeight: "bold",
+  fontSize: 14,
+  color: "#333",
+};
+
+const inputStyle = {
+  width: "100%",
+  minHeight: 36,
+  padding: "8px 10px",
+  fontSize: 14,
+  borderRadius: 4,
+  border: "1px solid #ccc",
+  marginBottom: 15,
+  boxSizing: "border-box",
+};
+
+const buttonStyle = {
+  padding: "10px 20px",
+  fontSize: 16,
+  backgroundColor: "#007bff",
+  color: "#fff",
+  border: "none",
+  borderRadius: 4,
+  cursor: "pointer",
+};
+
+export default function StyledForm() {
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+
+  const options = [
+    { value: "A1", label: "Aankoop" },
+    { value: "V1", label: "Verkoop" },
+  ];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    toast.success(
+      `Select: ${selectedOption?.value}\nDate: ${
+        startDate ? startDate.toLocaleDateString() : "None"
+      }`
+    );
+  };
+
+  const getAuth = async () => {
+    try {
+      const response = await axios.get("http://localhost:5001/octo-auth");
+      console.log(response);
+    } catch (err) {
+      console.error("Error fetching key:", err);
+    }
+  };
+
+  const showAuth = async () => {
+    try {
+      const response = await axios.get("http://localhost:5001/show-octo");
+      console.log(response);
+    } catch (err) {
+      console.error("Error fetching key:", err);
+    }
+  };
+
+  const dosToken = async () => {
+    try {
+      const response = await axios.get("http://localhost:5001/octo-token");
+      console.log(response);
+    } catch (err) {
+      console.error("Error fetching key:", err);
+    }
+  };
+
+  const getBookyears = async () => {
+    try {
+      const response = await axios.get("http://localhost:5001/octo-bookyears");
+      console.log(response);
+    } catch (err) {
+      console.error("Error fetching key:", err);
+    }
+  };
+
+  const getDossiers = async (dat) => {
+    console.log(dat);
+    try {
+      const response = await axios.post("http://localhost:5001/octo-dosm", {
+        bookyearId: "13",
+        journalKey: "A1",
+      });
+      console.log(response);
+    } catch (err) {
+      console.error("Error fetching key:", err);
+    }
+  };
 
   return (
     <>
       <Navbar />
-      <div className="container">
-        <h2>Import Invoices</h2>
-      </div>
+      <form style={formStyle} onSubmit={handleSubmit}>
+        {/*
+ <label style={labelStyle} htmlFor="textInput">
+          Your Text
+        </label>
+        <input
+          id="textInput"
+          type="text"
+          style={inputStyle}
+          value={textValue}
+          onChange={(e) => setTextValue(e.target.value)}
+          placeholder="Type something..."
+        />
+       */}
+
+        <label style={labelStyle} htmlFor="selectInput">
+          journal Key
+        </label>
+        <Select
+          id="selectInput"
+          options={options}
+          value={selectedOption}
+          onChange={setSelectedOption}
+          styles={customStyles}
+          placeholder="Select journalKey..."
+        />
+
+        <label style={labelStyle} htmlFor="datePicker">
+          Pick a date
+        </label>
+        <DatePicker
+          id="datePicker"
+          selected={startDate}
+          onChange={(date) => setStartDate(date)}
+          dateFormat="dd/MM/yyyy"
+          placeholderText="Select a date"
+          style={{ width: "100%" }}
+        />
+        <div className="bwrapper">
+          <CustomButton type="submit">Submit</CustomButton>
+        </div>
+        <div className="bwrapper">
+          <CustomButton type="button" onPress={getAuth}>
+            Get auth
+          </CustomButton>
+        </div>
+        <div className="bwrapper">
+          <CustomButton type="button" onPress={showAuth}>
+            Show auth
+          </CustomButton>
+        </div>
+        <div className="bwrapper">
+          <CustomButton type="button" onPress={dosToken}>
+            Get dosToken
+          </CustomButton>
+        </div>
+        <div className="bwrapper">
+          <CustomButton type="button" onPress={getBookyears}>
+            Get bookyears
+          </CustomButton>
+        </div>
+        {/*
+  <button type="submit" style={buttonStyle}>
+          Submit
+        </button>
+  */}
+      </form>
     </>
   );
 }

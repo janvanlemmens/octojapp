@@ -6,6 +6,7 @@ import { pdfjs } from "react-pdf";
 import CustomButton from "../components/ui/CustomButton";
 import Input from "../components/ui/Input";
 import Navbar from "../components/Navbar";
+import { toast } from "react-toastify";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -109,8 +110,9 @@ function Purchases() {
   };
 
   const handleLink = async () => {
-    console.log(selectedRow + "-" + file.name);
     if (selectedRow == null || !file) {
+      console.log("errrorororororor");
+      toast.error("Nothing to link");
       return;
     }
 

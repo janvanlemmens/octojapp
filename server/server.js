@@ -6,14 +6,33 @@ import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
 import axios from "axios";
+import CryptoJS from "crypto-js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path
   .dirname(__filename)
   .substring(0, path.dirname(__filename).lastIndexOf("/"));
 
-env.config();
+const api = axios.create();
 
+api.interceptors.request.use((config) => {
+  console.log("[Server Request]", config);
+  return config;
+});
+
+api.interceptors.response.use(
+  (res) => {
+    console.log("[Response]", res);
+    return res;
+  },
+  (err) => {
+    console.error("[Error]", err);
+    return Promise.reject(err);
+  }
+);
+
+env.config();
+const store = new Map();
 const app = express();
 const port = 5001;
 
@@ -138,6 +157,7 @@ app.post("/move-file", (req, res) => {
 app.get("/octo-auth", async (req, res) => {
   try {
     const url = process.env.URL + "/authentication";
+    const secret = process.env.SECRET_AUTH;
     const response = await axios.post(
       url,
       { user: process.env.USR, password: process.env.PAS }, // request body
@@ -148,21 +168,70 @@ app.get("/octo-auth", async (req, res) => {
         },
       }
     );
+    const tok = response.data.token;
+    store.set("auth", tok);
     res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: "API request failed" });
   }
 });
 
-app.post("/octo-token", async (req, res) => {
+function retrieveToken(loc) {
+  /*
+  const secret = process.env.SECRET_AUTH;
+  const bytes = CryptoJS.AES.decrypt(stored, secret);
+  const decrypted = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+  */
+  const stored = store.get(loc);
+  return stored;
+}
+
+app.get("/show-octo", (req, res) => {
+  const data = retrieveToken("auth");
+  res.json(data);
+});
+
+app.get("/octo-token", async (req, res) => {
   const url = process.env.URL + "/dossiers";
-  const response = await axios.post(url, null, {
-    params: { dossierId: process.env.DOS_NR }, // query parameters
-    headers: {
-      token: process.env.SHI,
-      "Content-Type": "application/json",
-    },
-  });
+  const auth = retrieveToken("auth");
+  try {
+    const response = await axios.post(url, null, {
+      params: { dossierId: process.env.DOS_NR }, // query parameters
+      headers: {
+        token: auth,
+        "Content-Type": "application/json",
+      },
+    });
+    const tok = response.data.Dossiertoken;
+    store.set("dostok", tok);
+    res.json(response.data);
+    // store.set("dostoken", response);
+  } catch (err) {
+    res.status(500).json({ error: "API request failed" });
+  }
+});
+
+app.get("/octo-bookyears", async (req, res) => {
+  const url =
+    process.env.URL + "/dossiers/" + process.env.DOS_NR + "/bookyears";
+  const auth = retrieveToken("dostok");
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        dossierToken: auth,
+        "Content-Type": "application/json",
+      },
+    });
+
+    res.json(response.data);
+    // store.set("dostoken", response);
+  } catch (err) {
+    res.status(500).json({ error: "API request failed" });
+  }
+});
+
+app.post("/octo-dosm", async (req, res) => {
+  console.log(req.body);
 });
 
 app.listen(port, () => {

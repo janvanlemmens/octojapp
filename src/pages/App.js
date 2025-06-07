@@ -14,30 +14,32 @@ function App() {
   };
 
   return (
-    <div className="auth-container">
-      <h2>Login / Register</h2>
-      <div className="input-wrapper">
-        <FaUser className="input-icon" />
-        <input
-          name="email"
-          type="text"
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-      <div className="input-wrapper">
-        <FaLock className="input-icon" />
-        <input
-          name="password"
-          placeholder="Password"
-          type="password"
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
+    <>
+      <div className="auth-container">
+        <h2>Login / Register</h2>
+        <div className="input-wrapper">
+          <FaUser className="input-icon" />
+          <input
+            name="email"
+            type="text"
+            placeholder="Email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className="input-wrapper">
+          <FaLock className="input-icon" />
+          <input
+            name="password"
+            placeholder="Password"
+            type="password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
-      <button onClick={() => handleAuth("login")}>Login</button>
-      <button onClick={() => handleAuth("register")}>Register</button>
-    </div>
+        <button onClick={() => handleAuth("login")}>Login</button>
+        <button onClick={() => handleAuth("register")}>Register</button>
+      </div>
+    </>
   );
 }
 
