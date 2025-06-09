@@ -190,6 +190,10 @@ app.get("/show-octo", (req, res) => {
   const data = retrieveToken("auth");
   res.json(data);
 });
+app.get("/show-dostim", (req, res) => {
+  const data = retrieveToken("dostim");
+  res.json(data);
+});
 
 app.get("/octo-token", async (req, res) => {
   const url = process.env.URL + "/dossiers";
@@ -204,6 +208,7 @@ app.get("/octo-token", async (req, res) => {
     });
     const tok = response.data.Dossiertoken;
     store.set("dostok", tok);
+    store.set("dostim", Date.now());
     res.json(response.data);
     // store.set("dostoken", response);
   } catch (err) {
@@ -230,8 +235,76 @@ app.get("/octo-bookyears", async (req, res) => {
   }
 });
 
+app.get("/octo-relations", async (req, res) => {
+  const url =
+    process.env.URL + "/dossiers/" + process.env.DOS_NR + "/relations";
+  const auth = retrieveToken("dostok");
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        dossierToken: auth,
+        "Content-Type": "application/json",
+      },
+    });
+
+    res.json(response.data);
+    // store.set("dostoken", response);
+  } catch (err) {
+    res.status(500).json({ error: "API request failed" });
+  }
+});
+
+app.post("/postgres-relations", async (req, res) => {
+  const arr = req.body;
+  let values = [];
+  arr.forEach((element) => {
+    values.push({
+      id: element.relationIdentificationServiceData.relationKey.id,
+      client: element.client,
+      supplier: element.supplier,
+      naam: element.name,
+      streetandnr: element.streetAndNr,
+      city: element.city,
+      postalcode: element.postalCode,
+      country: element.country,
+      vatnr: element.vatNr,
+    });
+  });
+  //console.log(values);
+  try {
+    const result = await pool.query(
+      `INSERT INTO relations (id, client, supplier, naam, streetandnr, city, postalcode, country, vatnr)
+   SELECT id, client, supplier, naam, streetandnr, city, postalcode, country, vatnr
+   FROM json_populate_recordset(NULL::relations, $1)
+   ON CONFLICT (id) DO NOTHING;`,
+      [JSON.stringify(values)]
+    );
+    console.log(result.rows);
+  } catch (err) {
+    console.log("error uploading data", err);
+  }
+});
+
 app.post("/octo-dosm", async (req, res) => {
-  console.log(req.body);
+  const url =
+    process.env.URL + "/dossiers/" + process.env.DOS_NR + "/invoices/modified";
+  const auth = retrieveToken("dostok");
+  const dm = req.body.dateModified;
+  const jk = req.body.journalKey;
+  try {
+    const response = await api.get(url, {
+      params: { bookyearId: "12", journalKey: jk, modifiedTimeStamp: dm },
+      headers: {
+        dossierToken: auth,
+        "Content-Type": "application/json",
+      },
+    });
+
+    res.json(response.data);
+    // store.set("dostoken", response);
+  } catch (err) {
+    res.status(500).json({ error: err });
+  }
 });
 
 app.listen(port, () => {

@@ -74,12 +74,25 @@ export default function StyledForm() {
   ];
 
   const handleSubmit = async (e) => {
+    if (selectedOption == null) {
+      toast.error("select journalKey");
+      return;
+    }
     e.preventDefault();
-    toast.success(
-      `Select: ${selectedOption?.value}\nDate: ${
-        startDate ? startDate.toLocaleDateString() : "None"
-      }`
-    );
+    const dat = startDate ? startDate.toLocaleDateString() : "None";
+    const [day, month, year] = dat.split("-");
+    const dd = String(day).padStart(2, "0");
+    const mm = String(month).padStart(2, "0");
+    const datum = year + "-" + mm + "-" + dd + " 00:00:00.000";
+    try {
+      const response = await axios.post("http://localhost:5001/octo-dosm", {
+        dateModified: datum,
+        journalKey: selectedOption.value,
+      });
+      console.log(response);
+    } catch (err) {
+      console.error("Error fetching dossier:", err);
+    }
   };
 
   const getAuth = async () => {

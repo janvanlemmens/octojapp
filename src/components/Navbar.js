@@ -25,8 +25,8 @@ function Navbar(props) {
             <li className={currentPath === "/import/invoices" ? "active" : ""}>
               <Link to="/import/invoices">Invoices</Link>
             </li>
-            <li className={currentPath === "/import/item2" ? "active" : ""}>
-              <Link to="/import/item2">Item 2</Link>
+            <li className={currentPath === "/import/relations" ? "active" : ""}>
+              <Link to="/import/relations">Relations</Link>
             </li>
           </ol>
         </li>
