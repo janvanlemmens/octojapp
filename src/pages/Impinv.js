@@ -66,16 +66,31 @@ const buttonStyle = {
 
 export default function StyledForm() {
   const [selectedOption, setSelectedOption] = useState(null);
+  const [bookyOption, setBookyOption] = useState(null);
   const [startDate, setStartDate] = useState(null);
+  const [invoices, setInvoices] = useState([]);
 
   const options = [
-    { value: "A1", label: "Aankoop" },
-    { value: "V1", label: "Verkoop" },
+    { value: "1", label: "Purchases" },
+    { value: "2", label: "Sales" },
+    { value: "3", label: "Financial" },
+  ];
+
+  const optionsby = [
+    { value: "9", label: "2021" },
+    { value: "10", label: "2022" },
+    { value: "11", label: "2023" },
+    { value: "12", label: "2024" },
+    { value: "13", label: "2025" },
   ];
 
   const handleSubmit = async (e) => {
+    if (bookyOption == null) {
+      toast.error("select bookYear");
+      return;
+    }
     if (selectedOption == null) {
-      toast.error("select journalKey");
+      toast.error("select journalTypeId");
       return;
     }
     e.preventDefault();
@@ -85,37 +100,36 @@ export default function StyledForm() {
     const mm = String(month).padStart(2, "0");
     const datum = year + "-" + mm + "-" + dd + " 00:00:00.000";
     try {
-      const response = await axios.post("http://localhost:5001/octo-dosm", {
+      const response = await axios.post("http://localhost:5001/octo-bookm", {
         dateModified: datum,
-        journalKey: selectedOption.value,
+        journalTypeId: selectedOption.value,
+        bookyearId: bookyOption.value,
       });
-      console.log(response);
+      setInvoices(response.data.modifiedBookings);
+      const bookings = invoices.filter((item) => item.lineSequenceNr == 1);
+      const response1 = await axios.post(
+        "http://localhost:5001/postgres-bookings",
+        bookings
+      );
+      console.log(response1);
     } catch (err) {
       console.error("Error fetching dossier:", err);
     }
   };
 
-  const getAuth = async () => {
+  const getDosTok = async () => {
     try {
-      const response = await axios.get("http://localhost:5001/octo-auth");
-      console.log(response);
+      const response1 = await axios.get("http://localhost:5001/octo-auth");
+      const response2 = await axios.get("http://localhost:5001/octo-token");
+      console.log(response2);
     } catch (err) {
-      console.error("Error fetching key:", err);
+      console.error("Error fetching dossierToken:", err);
     }
   };
 
   const showAuth = async () => {
     try {
       const response = await axios.get("http://localhost:5001/show-octo");
-      console.log(response);
-    } catch (err) {
-      console.error("Error fetching key:", err);
-    }
-  };
-
-  const dosToken = async () => {
-    try {
-      const response = await axios.get("http://localhost:5001/octo-token");
       console.log(response);
     } catch (err) {
       console.error("Error fetching key:", err);
@@ -131,17 +145,10 @@ export default function StyledForm() {
     }
   };
 
-  const getDossiers = async (dat) => {
-    console.log(dat);
-    try {
-      const response = await axios.post("http://localhost:5001/octo-dosm", {
-        bookyearId: "13",
-        journalKey: "A1",
-      });
-      console.log(response);
-    } catch (err) {
-      console.error("Error fetching key:", err);
-    }
+  const filInvoices = () => {
+    console.log(invoices);
+    let bookings = invoices.filter((item) => item.lineSequenceNr == 1);
+    console.log(bookings);
   };
 
   return (
@@ -162,8 +169,19 @@ export default function StyledForm() {
         />
        */}
 
+        <label style={labelStyle} htmlFor="bookYear">
+          bookYear
+        </label>
+        <Select
+          id="bookYear"
+          options={optionsby}
+          value={bookyOption}
+          onChange={setBookyOption}
+          styles={customStyles}
+          placeholder="Select BookYear..."
+        />
         <label style={labelStyle} htmlFor="selectInput">
-          journal Key
+          journalTypeId
         </label>
         <Select
           id="selectInput"
@@ -171,7 +189,7 @@ export default function StyledForm() {
           value={selectedOption}
           onChange={setSelectedOption}
           styles={customStyles}
-          placeholder="Select journalKey..."
+          placeholder="Select journalTypeId..."
         />
 
         <label style={labelStyle} htmlFor="datePicker">
@@ -189,8 +207,8 @@ export default function StyledForm() {
           <CustomButton type="submit">Submit</CustomButton>
         </div>
         <div className="bwrapper">
-          <CustomButton type="button" onPress={getAuth}>
-            Get auth
+          <CustomButton type="button" onPress={getDosTok}>
+            Get dossierToken
           </CustomButton>
         </div>
         <div className="bwrapper">
@@ -199,13 +217,13 @@ export default function StyledForm() {
           </CustomButton>
         </div>
         <div className="bwrapper">
-          <CustomButton type="button" onPress={dosToken}>
-            Get dosToken
+          <CustomButton type="button" onPress={getBookyears}>
+            Get bookyears
           </CustomButton>
         </div>
         <div className="bwrapper">
-          <CustomButton type="button" onPress={getBookyears}>
-            Get bookyears
+          <CustomButton type="button" onPress={filInvoices}>
+            filter invoices
           </CustomButton>
         </div>
         {/*

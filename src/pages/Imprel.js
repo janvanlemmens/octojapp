@@ -4,12 +4,6 @@ import CustomButton from "../components/ui/CustomButton";
 import { toast } from "react-toastify";
 import axios from "axios";
 
-const testarr = [
-  { id: 1, naam: "abc" },
-  { id: 2, naam: "cde" },
-  { id: 3, naam: "bcd" },
-];
-
 export default function Imprel() {
   const getDosTok = async () => {
     try {
@@ -21,10 +15,6 @@ export default function Imprel() {
     }
   };
   const getDosTim = async () => {
-    testarr.forEach((element) => {
-      console.log(element.naam);
-    });
-
     try {
       const response = await axios.get("http://localhost:5001/show-dostim");
       const curDat = Date.now();

@@ -39,6 +39,7 @@ const port = 5001;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public"))); //to tell server that public folder is static
+app.use(express.json({ limit: "200mb" }));
 
 const pool = new pg.Pool({
   user: process.env.DB_USER,
@@ -158,7 +159,7 @@ app.get("/octo-auth", async (req, res) => {
   try {
     const url = process.env.URL + "/authentication";
     const secret = process.env.SECRET_AUTH;
-    const response = await axios.post(
+    const response = await api.post(
       url,
       { user: process.env.USR, password: process.env.PAS }, // request body
       {
@@ -285,15 +286,21 @@ app.post("/postgres-relations", async (req, res) => {
   }
 });
 
-app.post("/octo-dosm", async (req, res) => {
+app.post("/octo-bookm", async (req, res) => {
+  const by = req.body.bookyearId;
   const url =
-    process.env.URL + "/dossiers/" + process.env.DOS_NR + "/invoices/modified";
+    process.env.URL +
+    "/dossiers/" +
+    process.env.DOS_NR +
+    "/bookyears/" +
+    by +
+    "/bookings/modified";
   const auth = retrieveToken("dostok");
   const dm = req.body.dateModified;
-  const jk = req.body.journalKey;
+  const jk = req.body.journalTypeId;
   try {
     const response = await api.get(url, {
-      params: { bookyearId: "12", journalKey: jk, modifiedTimeStamp: dm },
+      params: { journalTypeId: jk, modifiedTimeStamp: dm },
       headers: {
         dossierToken: auth,
         "Content-Type": "application/json",
@@ -304,6 +311,51 @@ app.post("/octo-dosm", async (req, res) => {
     // store.set("dostoken", response);
   } catch (err) {
     res.status(500).json({ error: err });
+  }
+});
+
+app.post("/postgres-bookings", async (req, res) => {
+  const arr = req.body;
+  const bookings = arr.filter((item) => item.lineSequenceNr == 1);
+  let values = [];
+  bookings.forEach((element) => {
+    values.push({
+      journaltype: element.journalType,
+      journalnr: element.journalNr,
+      documentnr: element.documentSequenceNr,
+      periodnr: element.bookyearPeriodeNr,
+      documentdate: element.documentDate,
+      relation_id: element.relationKey.id,
+      documentamount: element.documentAmount,
+      currency: element.currencyCode,
+      comment: element.comment,
+      reference: element.reference,
+      expirydate: element.expiryDate,
+      line: element.lineSequenceNr,
+    });
+  });
+  const json = JSON.stringify(values);
+  const byteSize = Buffer.byteLength(json, "utf8");
+  console.log(`${byteSize} bytes`);
+  //console.log(JSON.stringify(values));
+  try {
+    const result = await pool.query(
+      `INSERT INTO bookings (
+  journaltype, journalnr, documentnr, periodnr, documentdate,
+  relation_id, currency, documentamount, comment, reference,
+  expirydate, line
+)
+SELECT journaltype, journalnr, documentnr, periodnr, documentdate,
+  relation_id, currency, documentamount::real, comment, reference,
+  expirydate, line
+FROM json_populate_recordset(NULL::bookings, $1::json) AS r
+ON CONFLICT (journaltype, journalnr, documentnr, periodnr) DO NOTHING;`,
+      [JSON.stringify(values)]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.log("error uploading data", err);
   }
 });
 
