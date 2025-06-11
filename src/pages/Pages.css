@@ -74,6 +74,45 @@ th, td {
     
   }
 
+  .custom-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .expanded {
+    background-color: #e0f7e9; /* Light green */
+  }
+  
+  .main-row {
+    cursor: pointer;
+    border-bottom: 1px solid #ccc;
+    height: 25px;
+  }
+  
+  .main-row:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .detail-row {
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .cell {
+    padding: 6px;
+    font-size: 14px;
+    color: #444;
+  }
+  
+  .bold {
+    font-weight: 600;
+  }
+  
+  .detail {
+    font-size: 13px;
+    color: #777;
+  }
+
  .iwrapper {
   display: inline-block;
   width : 100px;

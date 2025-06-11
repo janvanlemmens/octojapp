@@ -58,6 +58,20 @@ const pool = new pg.Pool({
     console.error("❌ DB connection error:", err.message);
   });*/
 
+app.post("/pg/bookings", async (req, res) => {
+  const { from, till, journaltype } = req.body;
+  try {
+    const result = await pool.query(
+      "SELECT b.*, r.naam FROM bookings b JOIN relations r ON b.relation_id = r.id WHERE (b.periodnr BETWEEN $1 AND $2) AND b.journaltype = $3 order by periodnr desc,documentnr desc",
+      [from, till, journaltype]
+    );
+    //console.log(result);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).send("Database error");
+  }
+});
+
 app.post("/api/invoicesin", async (req, res) => {
   const { from, till } = req.body;
   console.log(from);
@@ -353,7 +367,7 @@ ON CONFLICT (journaltype, journalnr, documentnr, periodnr) DO NOTHING;`,
       [JSON.stringify(values)]
     );
 
-    res.json(result.rows);
+    res.json(result.rows.length);
   } catch (err) {
     console.log("error uploading data", err);
   }

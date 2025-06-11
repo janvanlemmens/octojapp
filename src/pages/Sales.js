@@ -13,7 +13,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 function Sales() {
-  const [invoices, setInvoices] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState("");
@@ -22,6 +22,7 @@ function Sales() {
   const fileInputRef = useRef(null);
   const [refresh, setRefresh] = useState(false);
   const [formData, setFormData] = useState({ from: "", till: "" });
+  const [expandedRow, setExpandedRow] = useState(null);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -60,7 +61,7 @@ function Sales() {
   const handleChange = (e) => setEditValue(e.target.value);
 
   const handleBlur = (id) => {
-    setInvoices((prev) =>
+    setBookings((prev) =>
       prev.map((row) =>
         row.id === id ? { ...row, description: editValue } : row
       )
@@ -74,15 +75,13 @@ function Sales() {
         const yearprev = new Date().getFullYear() - 1 + "01";
         const yearcur = new Date().getFullYear() + "12";
 
-        const response = await axios.post(
-          "http://localhost:5001/api/invoicesout",
-          {
-            from: formData.from ? formData.from : yearprev,
-            till: formData.till ? formData.till : yearcur,
-          }
-        );
-        setInvoices(response.data);
-        console.log(invoices);
+        const response = await axios.post("http://localhost:5001/pg/bookings", {
+          from: formData.from ? formData.from : yearprev,
+          till: formData.till ? formData.till : yearcur,
+          journaltype: 1,
+        });
+        setBookings(response.data);
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -91,19 +90,30 @@ function Sales() {
     fetchData();
   }, [refresh]);
 
-  const filteredInvoices = invoices
+  const filteredBookings = bookings
     .filter(
-      (inv) =>
-        inv.id.toString().includes(searchTerm) ||
-        inv.datum.includes(searchTerm) ||
-        inv.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inv.amount.toString().includes(searchTerm) ||
-        inv.description.toString().includes(searchTerm)
+      (book) =>
+        book.documentdate.includes(searchTerm) ||
+        book.naam.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        book.documentamount.toString().includes(searchTerm) ||
+        book.comment.toString().includes(searchTerm) ||
+        book.reference.toString().includes(searchTerm)
     )
-    .sort((a, b) => b.id - a.id);
+    .sort((a, b) => {
+      if (a.journaltype !== b.journaltype) return 0;
+
+      // Keep same journalnr
+      if (a.journalnr !== b.journalnr) return 0;
+
+      // Sort by latest periodnr (descending)
+      if (a.periodnr !== b.periodnr) return b.periodnr - a.periodnr;
+
+      // Sort by latest documentnr (descending)
+      return b.documentnr - a.documentnr;
+    });
 
   const handleRefr = () => {
-    setInvoices([]);
+    setBookings([]);
     setSelectedRow(null);
     setRefresh((prev) => !prev);
   };
@@ -116,7 +126,7 @@ function Sales() {
 
     try {
       const pdfname = file.name;
-      const facid = filteredInvoices[selectedRow].id;
+      const facid = filteredBookings[selectedRow].id;
 
       const response = await axios.post("http://localhost:5001/api/updout", {
         prop1: pdfname,
@@ -131,6 +141,10 @@ function Sales() {
     } catch (err) {
       console.error("Error updating property:", err);
     }
+  };
+
+  const toggleRow = (id) => {
+    setExpandedRow((prevId) => (prevId === id ? null : id));
   };
 
   return (
@@ -183,7 +197,7 @@ function Sales() {
           </div>
 
           {/* 📄 Invoice Table */}
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table className="custom-table">
             <thead style={{ backgroundColor: "#f0f0f0" }}>
               <tr>
                 <th>Period</th>
@@ -191,52 +205,41 @@ function Sales() {
                 <th>Date</th>
                 <th>Customer</th>
                 <th>Amount</th>
-                <th>Description</th>
+                <th>Comment</th>
                 <th>File</th>
               </tr>
             </thead>
             <tbody>
-              {filteredInvoices.length > 0 ? (
-                filteredInvoices.map((inv, index) => (
-                  <tr
-                    className={selectedRow === index ? "selected-row" : ""}
-                    key={inv.id}
-                    onClick={() => showPdf(inv, index)}
-                  >
-                    <td>{inv.booking}</td>
-                    <td>{inv.id}</td>
-                    <td>{inv.datum.split("T", 1)}</td>
-                    <td>{inv.customer}</td>
-                    <td>{inv.amount.toFixed(2)}</td>
-                    <td onDoubleClick={() => handleDoubleClick(inv)}>
-                      {editingId === inv.id ? (
-                        <input
-                          value={editValue}
-                          onChange={handleChange}
-                          onBlur={() => handleBlur(inv.id)}
-                          autoFocus
-                          style={{
-                            width: "100%",
-                            maxWidth: "300px",
-                          }}
-                        />
-                      ) : (
-                        inv.description
-                      )}
-                    </td>
-                    <td>{inv.pdfpath}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="4"
-                    style={{ textAlign: "center", padding: "1rem" }}
-                  >
-                    No invoices found.
-                  </td>
-                </tr>
-              )}
+              {filteredBookings.map((record) => {
+                return (
+                  <React.Fragment key={record.id}>
+                    <tr
+                      className={`main-row ${
+                        expandedRow === record.id ? "expanded" : ""
+                      }`}
+                      onClick={() => toggleRow(record.id)}
+                    >
+                      <td className="cell bold">{record.periodnr}</td>
+                      <td className="cell">{record.documentnr}</td>
+                      <td className="cell">
+                        {record.documentdate.split("T", 1)}
+                      </td>
+                      <td className="cell">{record.naam}</td>
+                      <td className="cell">
+                        {record.documentamount.toFixed(2)}
+                      </td>
+                      <td className="cell">{record.comment}</td>
+                    </tr>
+                    {record.reference && expandedRow === record.id && (
+                      <tr className="detail-row">
+                        <td className="cell detail" colSpan="2">
+                          {`reference: ${record.reference}`}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
