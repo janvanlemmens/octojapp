@@ -17,11 +17,7 @@ const router = createBrowserRouter([
     element: <App />,
   },
   {
-    path: "/purchases",
-    element: <Purchases />,
-  },
-  {
-    path: "/sales",
+    path: "/bookings",
     element: <Sales />,
   },
   {

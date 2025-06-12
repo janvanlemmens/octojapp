@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import Select from "react-select";
 import axios from "axios";
 import "./Pages.css";
 import PdfViewer from "../components/PdfViewer";
@@ -6,13 +7,38 @@ import { pdfjs } from "react-pdf";
 import CustomButton from "../components/ui/CustomButton";
 import Input from "../components/ui/Input";
 import Navbar from "../components/Navbar";
+import { toast } from "react-toastify";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
 ).toString();
 
+const customStyles = {
+  control: (provided) => ({
+    ...provided,
+    borderRadius: 4,
+    borderColor: "#888",
+    minHeight: 36,
+    boxShadow: "none",
+    "&:hover": {
+      borderColor: "#555",
+    },
+  }),
+  menu: (provided) => ({
+    ...provided,
+    borderRadius: 4,
+  }),
+};
+
+const joptions = [
+  { value: "1_1", label: "Aankopen" },
+  { value: "1_2", label: "Aankopen Spanje" },
+  { value: "2_1", label: "Verkopen" },
+];
+
 function Sales() {
+  const [journal, setJournal] = useState("");
   const [bookings, setBookings] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null);
@@ -31,20 +57,22 @@ function Sales() {
   async function showPdf(data, idx) {
     setSelectedRow(idx);
 
-    const booking = data.booking.toString();
-    const pdfname = data.pdfpath;
+    const per = data.periodnr;
+    const pdfname = data.pdf;
 
-    if (pdfname == null) return;
+    if (pdfname == null) {
+      return;
+    }
     try {
       const response = await axios.post("http://localhost:5001/move-file", {
-        booking: booking,
+        period: per,
         pdfname: pdfname,
-        swin: 0,
       });
-      setFile("/uploads/out/" + pdfname);
+      setFile("/uploads/bookings/" + pdfname);
       console.log(response);
     } catch (err) {}
   }
+
   const handleDoubleClick = (row) => {
     setEditingId(row.id);
     setEditValue(row.description);
@@ -56,6 +84,13 @@ function Sales() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleSelect = (obj) => {
+    setRefresh((prev) => !prev);
+    console.log(journal);
+    console.log(obj);
+    setJournal(obj);
   };
 
   const handleChange = (e) => setEditValue(e.target.value);
@@ -78,7 +113,7 @@ function Sales() {
         const response = await axios.post("http://localhost:5001/pg/bookings", {
           from: formData.from ? formData.from : yearprev,
           till: formData.till ? formData.till : yearcur,
-          journaltype: 1,
+          journal: journal.value,
         });
         setBookings(response.data);
         console.log(response.data);
@@ -119,16 +154,24 @@ function Sales() {
   };
 
   const handleLink = async () => {
-    console.log(selectedRow + "-" + file.name);
-    if (selectedRow == null || !file) {
+    console.log(file);
+
+    if (selectedRow == null) {
+      toast.error("Select row please");
       return;
     }
+    if (!file) {
+      toast.error("Select file please");
+      return;
+    }
+    const ty = typeof file;
+    if (ty === "string") return;
 
     try {
       const pdfname = file.name;
       const facid = filteredBookings[selectedRow].id;
 
-      const response = await axios.post("http://localhost:5001/api/updout", {
+      const response = await axios.post("http://localhost:5001/pg/updpdf", {
         prop1: pdfname,
         prop2: facid,
       });
@@ -137,14 +180,16 @@ function Sales() {
       fileInputRef.current.value = "";
       setFile(null);
       setSelectedRow(null);
+      setExpandedRow(null);
       setRefresh((prev) => !prev);
     } catch (err) {
       console.error("Error updating property:", err);
     }
   };
 
-  const toggleRow = (id) => {
-    setExpandedRow((prevId) => (prevId === id ? null : id));
+  const toggleRow = (book, idx) => {
+    setExpandedRow((prevId) => (prevId === book.id ? null : book.id));
+    showPdf(book, idx);
   };
 
   return (
@@ -152,7 +197,16 @@ function Sales() {
       <Navbar />
       <div className="container">
         <div className="column2">
-          <h2>Invoices Out</h2>
+          <h3>
+            <Select
+              id="selectJournal"
+              options={joptions}
+              value={journal}
+              onChange={handleSelect}
+              styles={customStyles}
+              placeholder="Select journal..."
+            />
+          </h3>
 
           {/* 🔍 Search Input */}
           <div className="inputContainer">
@@ -210,25 +264,27 @@ function Sales() {
               </tr>
             </thead>
             <tbody>
-              {filteredBookings.map((record) => {
+              {filteredBookings.map((record, index) => {
+                const [p1, p2, p3, p4] = record.id.split("-");
                 return (
                   <React.Fragment key={record.id}>
                     <tr
                       className={`main-row ${
                         expandedRow === record.id ? "expanded" : ""
-                      }`}
-                      onClick={() => toggleRow(record.id)}
+                      } ${selectedRow === index ? "selected-row" : ""}`}
+                      onClick={() => toggleRow(record, index)}
                     >
-                      <td className="cell bold">{record.periodnr}</td>
-                      <td className="cell">{record.documentnr}</td>
+                      <td className="cell bold">{p1}</td>
+                      <td className="cell">{p4}</td>
                       <td className="cell">
                         {record.documentdate.split("T", 1)}
                       </td>
                       <td className="cell">{record.naam}</td>
                       <td className="cell">
-                        {record.documentamount.toFixed(2)}
+                        {record.documentamount.toFixed(2) * (p2 === 1 ? -1 : 1)}
                       </td>
                       <td className="cell">{record.comment}</td>
+                      <td className="cell">{record.pdf}</td>
                     </tr>
                     {record.reference && expandedRow === record.id && (
                       <tr className="detail-row">

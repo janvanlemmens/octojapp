@@ -9,11 +9,8 @@ function Navbar(props) {
   return (
     <div className="navigation-menu">
       <ol className="menu">
-        <li className={currentPath === "/purchases" ? "active" : ""}>
-          <Link to="/purchases">Purchases</Link>
-        </li>
-        <li className={currentPath === "/sales" ? "active" : ""}>
-          <Link to="/sales">Sales</Link>
+        <li className={currentPath === "/bookings" ? "active" : ""}>
+          <Link to="/bookings">Bookings</Link>
         </li>
         <li
           className={`has-submenu ${

@@ -32,32 +32,23 @@ tr {
     background-color: #d0f0c0; /* Selected color */
   }
 
- 
-
-th, td {
-    text-align: left; /* or center, right */
-    padding: 0.2rem;
-    border-bottom: 1px solid #ccc;
-  }
 
   th:nth-child(1),
   td:nth-child(1),
   th:nth-child(2),
   td:nth-child(2),
   th:nth-child(3),
-  td:nth-child(32) {
+  td:nth-child(3) {
     /*background-color: lightblue;*/
     text-align: left;
     width: 100px
   }
-  
   th:nth-child(4),
   td:nth-child(4) {
     /*background-color: lightblue;*/
     text-align: left;
-    width: 175px;
+    width: 185px;
   }
-
   th:nth-child(5),
   td:nth-child(5) {
     /*background-color: lightblue;*/
@@ -71,16 +62,30 @@ th, td {
   td:nth-child(6) {
     /*background-color: lightblue;*/
    width: 400px;
+   text-align : left;
+   padding-left: 5px
+    
+  }
+
+  th:nth-child(7),
+  td:nth-child(7) {
+    /*background-color: lightblue;*/
+  
+   text-align : left;
+  
     
   }
 
   .custom-table {
     width: 100%;
     border-collapse: collapse;
+    height: 80vh;
   }
 
   .expanded {
-    background-color: #e0f7e9; /* Light green */
+    background-color: #d0f0c0; /* Light green */
+    height: 25px;
+    overflow: hidden;
   }
   
   .main-row {
@@ -96,11 +101,12 @@ th, td {
   .detail-row {
     background-color: #f9f9f9;
     border-bottom: 1px solid #ccc;
+    height : 25px;
   }
   
   .cell {
-    padding: 6px;
-    font-size: 14px;
+    padding: 1px ;
+    font-size: 12px;
     color: #444;
   }
   

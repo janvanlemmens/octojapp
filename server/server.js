@@ -59,11 +59,11 @@ const pool = new pg.Pool({
   });*/
 
 app.post("/pg/bookings", async (req, res) => {
-  const { from, till, journaltype } = req.body;
+  const { from, till, journal } = req.body;
   try {
     const result = await pool.query(
-      "SELECT b.*, r.naam FROM bookings b JOIN relations r ON b.relation_id = r.id WHERE (b.periodnr BETWEEN $1 AND $2) AND b.journaltype = $3 order by periodnr desc,documentnr desc",
-      [from, till, journaltype]
+      "SELECT b.*, r.naam FROM bookings b JOIN relations r ON b.relation_id = r.id WHERE (b.periodnr BETWEEN $1 AND $2) AND b.journal = $3 order by periodnr desc,documentnr desc",
+      [from, till, journal]
     );
     //console.log(result);
     res.json(result.rows);
@@ -72,64 +72,14 @@ app.post("/pg/bookings", async (req, res) => {
   }
 });
 
-app.post("/api/invoicesin", async (req, res) => {
-  const { from, till } = req.body;
-  console.log(from);
-  try {
-    const result = await pool.query(
-      "SELECT * FROM invoicesin where booking >= $1 and booking <= $2",
-      [from, till]
-    );
-    console.log(result.rows);
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Database error");
-  }
-});
-
-app.post("/api/invoicesout", async (req, res) => {
-  const { from, till } = req.body;
-  console.log(from);
-  try {
-    const result = await pool.query(
-      "SELECT * FROM invoicesout where booking >= $1 and booking <= $2",
-      [from, till]
-    );
-    console.log(result.rows);
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Database error");
-  }
-});
-
-app.post("/api/updin", async (req, res) => {
+app.post("/pg/updpdf", async (req, res) => {
   const { prop1, prop2 } = req.body;
-
-  console.log("Received:", prop1, prop2);
-
+  const [per, jty, jnr, dnr] = prop2.split("-");
+  //console.log("Received:", prop1, prop2, per);
   try {
     const result = await pool.query(
-      "UPDATE invoicesin SET pdfpath = $1 WHERE id = $2",
-      [prop1, prop2]
-    );
-    res.status(200).json({ success: true, rowCount: result.rowCount });
-  } catch (err) {
-    console.error("Error updating PDF path:", err);
-    res.status(500).json({ error: "Database update failed" });
-  }
-});
-
-app.post("/api/updout", async (req, res) => {
-  const { prop1, prop2 } = req.body;
-
-  console.log("Received:", prop1, prop2);
-
-  try {
-    const result = await pool.query(
-      "UPDATE invoicesout SET pdfpath = $1 WHERE id = $2",
-      [prop1, prop2]
+      "UPDATE bookings SET pdf = $1 WHERE periodnr = $2 and journaltype = $3 and journalnr = $4 and documentnr =$5",
+      [prop1, per, jty, jnr, dnr]
     );
     res.status(200).json({ success: true, rowCount: result.rowCount });
   } catch (err) {
@@ -139,20 +89,10 @@ app.post("/api/updout", async (req, res) => {
 });
 
 app.post("/move-file", (req, res) => {
-  const { booking, pdfname, swin } = req.body;
-  const fol =
-    "inv" +
-    booking.toString().substring(0, 4) +
-    "/" +
-    (swin ? "in" : "out") +
-    "/";
+  const { period, pdfname } = req.body;
+  const fol = "bk" + period.toString().substring(0, 4) + "/";
   const source = process.env.PDF_SOURCE + fol + pdfname;
-  const dest = path.join(
-    __dirname,
-    "public",
-    "uploads/" + (swin ? "in" : "out"),
-    pdfname
-  );
+  const dest = path.join(__dirname, "public", "/uploads/bookings/" + pdfname);
   //console.log(source + "-" + dest);
 
   if (fs.existsSync(dest)) {

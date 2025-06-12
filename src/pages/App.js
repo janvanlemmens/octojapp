@@ -10,7 +10,7 @@ function App() {
   const navigate = useNavigate();
 
   const handleAuth = async (endpoint) => {
-    navigate("/purchases");
+    navigate("/bookings");
   };
 
   return (
