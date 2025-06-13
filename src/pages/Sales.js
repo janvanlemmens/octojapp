@@ -88,9 +88,8 @@ function Sales() {
 
   const handleSelect = (obj) => {
     setRefresh((prev) => !prev);
-    console.log(journal);
-    console.log(obj);
     setJournal(obj);
+    console.log("journal", journal);
   };
 
   const handleChange = (e) => setEditValue(e.target.value);
@@ -232,7 +231,11 @@ function Sales() {
             <div className="swrapper">
               <input
                 type="text"
-                placeholder="Search by Date, Customer, Amount..."
+                placeholder={
+                  journal.value.startsWith(1)
+                    ? "Search by Date, Supplier, Amount, ..."
+                    : "Search by Date, Customer, Amount, ..."
+                }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -257,7 +260,7 @@ function Sales() {
                 <th>Period</th>
                 <th>Invoice</th>
                 <th>Date</th>
-                <th>Customer</th>
+                <th>{journal.value.startsWith(1) ? "Supplier" : "Customer"}</th>
                 <th>Amount</th>
                 <th>Comment</th>
                 <th>File</th>
@@ -266,6 +269,7 @@ function Sales() {
             <tbody>
               {filteredBookings.map((record, index) => {
                 const [p1, p2, p3, p4] = record.id.split("-");
+
                 return (
                   <React.Fragment key={record.id}>
                     <tr
@@ -281,7 +285,7 @@ function Sales() {
                       </td>
                       <td className="cell">{record.naam}</td>
                       <td className="cell">
-                        {record.documentamount.toFixed(2) * (p2 === 1 ? -1 : 1)}
+                        {record.documentamount.toFixed(2) * (p2 == 1 ? -1 : 1)}
                       </td>
                       <td className="cell">{record.comment}</td>
                       <td className="cell">{record.pdf}</td>

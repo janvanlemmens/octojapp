@@ -109,6 +109,22 @@ app.post("/move-file", (req, res) => {
   });
 });
 
+app.post("/clear-uploads", (req, res) => {
+  const { folder } = req.body;
+  const uploadsDir = path.join(__dirname, "public" + "/uploads/" + folder);
+  fs.readdir(uploadsDir, (err, files) => {
+    if (err) return res.status(500).json({ error: "Unable to read folder" });
+
+    files.forEach((file) => {
+      fs.unlink(path.join(uploadsDir, file), (err) => {
+        if (err) console.error(err);
+      });
+    });
+
+    res.json({ message: "All files deleted from uploads" });
+  });
+});
+
 app.get("/octo-auth", async (req, res) => {
   try {
     const url = process.env.URL + "/authentication";
