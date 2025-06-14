@@ -7,6 +7,7 @@ import Purchases from "./pages/Purchases";
 import Sales from "./pages/Sales";
 import Impinv from "./pages/Impinv";
 import Imprel from "./pages/Imprel";
+import Autolink from "./pages/Autolink";
 import reportWebVitals from "./reportWebVitals";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
   {
     path: "/import/relations",
     element: <Imprel />,
+  },
+  {
+    path: "/autolink",
+    element: <Autolink />,
   },
 ]);
 

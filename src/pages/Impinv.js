@@ -106,7 +106,7 @@ export default function StyledForm() {
         bookyearId: bookyOption.value,
       });
       setInvoices(response.data.modifiedBookings);
-      const bookings = invoices.filter((item) => item.lineSequenceNr == 1);
+      const bookings = invoices.filter((item) => item.lineSequenceNr === 1);
       const response1 = await axios.post(
         "http://localhost:5001/postgres-bookings",
         bookings

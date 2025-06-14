@@ -38,7 +38,7 @@ const joptions = [
 ];
 
 function Sales() {
-  const [journal, setJournal] = useState("");
+  const [journal, setJournal] = useState({ value: "1_1", label: "Aankopen" });
   const [bookings, setBookings] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null);

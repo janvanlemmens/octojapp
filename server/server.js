@@ -60,12 +60,16 @@ const pool = new pg.Pool({
 
 app.post("/pg/bookings", async (req, res) => {
   const { from, till, journal } = req.body;
+  let que =
+    "SELECT b.*, r.naam FROM bookings b JOIN relations r ON b.relation_id = r.id WHERE (b.periodnr BETWEEN $1 AND $2) AND b.journal = $3 order by periodnr desc,documentnr desc";
+  if (journal === "*") {
+    que =
+      "SELECT b.*, r.naam FROM bookings b JOIN relations r ON b.relation_id = r.id WHERE (b.periodnr BETWEEN $1 AND $2) and journal != $3 order by periodnr desc,documentnr desc";
+  }
+  console.log("que", que);
   try {
-    const result = await pool.query(
-      "SELECT b.*, r.naam FROM bookings b JOIN relations r ON b.relation_id = r.id WHERE (b.periodnr BETWEEN $1 AND $2) AND b.journal = $3 order by periodnr desc,documentnr desc",
-      [from, till, journal]
-    );
-    //console.log(result);
+    const result = await pool.query(que, [from, till, journal]);
+    console.log(result);
     res.json(result.rows);
   } catch (err) {
     res.status(500).send("Database error");
@@ -109,6 +113,22 @@ app.post("/move-file", (req, res) => {
   });
 });
 
+app.post("/read-dir", (req, res) => {
+  const { folder } = req.body;
+  const source = process.env.PDF_SOURCE + folder;
+  console.log(source);
+  let filelist = [];
+  fs.readdir(source, (err, files) => {
+    if (err) return res.status(500).json({ error: "Unable to read folder" });
+
+    files.forEach((file) => {
+      filelist.push(file);
+    });
+
+    res.json({ list: filelist });
+  });
+});
+
 app.post("/clear-uploads", (req, res) => {
   const { folder } = req.body;
   const uploadsDir = path.join(__dirname, "public" + "/uploads/" + folder);
@@ -129,7 +149,7 @@ app.get("/octo-auth", async (req, res) => {
   try {
     const url = process.env.URL + "/authentication";
     const secret = process.env.SECRET_AUTH;
-    const response = await api.post(
+    const response = await axios.post(
       url,
       { user: process.env.USR, password: process.env.PAS }, // request body
       {
@@ -269,7 +289,7 @@ app.post("/octo-bookm", async (req, res) => {
   const dm = req.body.dateModified;
   const jk = req.body.journalTypeId;
   try {
-    const response = await api.get(url, {
+    const response = await axios.get(url, {
       params: { journalTypeId: jk, modifiedTimeStamp: dm },
       headers: {
         dossierToken: auth,
@@ -285,8 +305,9 @@ app.post("/octo-bookm", async (req, res) => {
 });
 
 app.post("/postgres-bookings", async (req, res) => {
-  const arr = req.body;
-  const bookings = arr.filter((item) => item.lineSequenceNr == 1);
+  const bookings = req.body;
+  //console.log("bookingslen", bookings.length);
+
   let values = [];
   bookings.forEach((element) => {
     values.push({
@@ -305,9 +326,9 @@ app.post("/postgres-bookings", async (req, res) => {
     });
   });
   const json = JSON.stringify(values);
-  const byteSize = Buffer.byteLength(json, "utf8");
-  console.log(`${byteSize} bytes`);
-  //console.log(JSON.stringify(values));
+  //const byteSize = Buffer.byteLength(json, "utf8");
+  //console.log(`${byteSize} bytes`);
+  //console.log("json", json);
   try {
     const result = await pool.query(
       `INSERT INTO bookings (

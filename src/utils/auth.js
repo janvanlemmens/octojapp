@@ -2,7 +2,6 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 export async function logoutUser() {
-  toast.success("lklk");
   try {
     const response = await axios.post("http://localhost:5001/clear-uploads", {
       folder: "bookings",
@@ -14,5 +13,3 @@ export async function logoutUser() {
 
   // Clear tokens, redirect, etc.
 }
-
-export function autolink() {}

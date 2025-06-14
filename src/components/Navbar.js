@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./Navbar.css";
-import { Link, useLocation } from "react-router-dom";
-import { logoutUser, autolink } from "../utils/auth";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { logoutUser } from "../utils/auth";
 
 function Navbar(props) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -9,6 +9,8 @@ function Navbar(props) {
   const [showModal, setShowModal] = useState(false);
   const location = useLocation(); // gives access to current URL
   const currentPath = location.pathname;
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handler = (e) => {
@@ -19,6 +21,10 @@ function Navbar(props) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  const autolink = () => {
+    navigate("/autolink");
+  };
 
   const handleLogout = () => {
     setMenuOpen(false);
