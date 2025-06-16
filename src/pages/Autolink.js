@@ -38,7 +38,7 @@ export default function Autolink() {
     link();
   }, [filelist, invoicelist]);
 
-  const link = () => {
+  const link = async () => {
     const cleanFilelist = filelist.map((file, idx) => {
       const parts = file.replace(".pdf", "").split("_");
       const lastPart = String(parseInt(parts[parts.length - 1], 10)); // Remove leading zeros
@@ -51,11 +51,19 @@ export default function Autolink() {
       const target = invoice.journal + "_" + invoice.documentnr + ".pdf";
       const index = cleanFilelist.indexOf(target);
       if (index !== -1) {
-        arr.push({ invid: invoice.id, pdf: filelist[index] });
+        arr.push({ id: invoice.id, pdf: filelist[index] });
         //console.log(invoice.id + "-" + filelist[index]);
       }
     });
     console.log("array", arr);
+    try {
+      const result = await axios.post("http://localhost:5001/pg/pdf-all", arr);
+      //console.log(result.data);
+    } catch (err) {
+      console.log("error updating", err);
+    }
+
+    //update postgres
   };
 
   return (

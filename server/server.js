@@ -8,6 +8,8 @@ import { fileURLToPath } from "url";
 import axios from "axios";
 import CryptoJS from "crypto-js";
 
+console.clear();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path
   .dirname(__filename)
@@ -89,6 +91,27 @@ app.post("/pg/updpdf", async (req, res) => {
   } catch (err) {
     console.error("Error updating PDF path:", err);
     res.status(500).json({ error: "Database update failed" });
+  }
+});
+app.post("/pg/pdf-all", async (req, res) => {
+  const liarray = req.body;
+
+  const query = `
+  WITH new_data AS (
+    SELECT * FROM json_populate_recordset(NULL::bookings, $1)
+  )
+  UPDATE bookings b
+  SET pdf = nd.pdf
+  FROM new_data nd
+  WHERE b.id = nd.id and b.pdf is null
+  RETURNING b.id, b.pdf;
+`;
+  try {
+    const result = await pool.query(query, [JSON.stringify(liarray)]);
+    console.log("rows updated", result.rowCount);
+    //console.log("rows", result.rows);
+  } catch (err) {
+    console.log("error uploading data", err);
   }
 });
 
